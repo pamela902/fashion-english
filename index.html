@@ -15,6 +15,9 @@ body{background:linear-gradient(145deg,#fff5f0 0%,#f0e6ff 100%);display:flex;fle
 .gender-btn button{padding:6px 16px;border:2px solid #ddd;border-radius:20px;background:#fff;font-size:14px;font-weight:600;cursor:pointer;transition:.2s;color:#666}
 .gender-btn button.active{border-color:#6c5ce7;background:#6c5ce7;color:#fff}
 .gender-btn button:active{transform:scale(.95)}
+.mode-toggle{display:flex;gap:4px}
+.mode-toggle button{padding:5px 12px;border:2px solid #ddd;border-radius:16px;background:#fff;font-size:12px;font-weight:700;cursor:pointer;transition:.2s;color:#666}
+.mode-toggle button.active{border-color:#e17055;background:#e17055;color:#fff}
 .doll-area{flex:1;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;min-height:0}
 .doll-wrap{position:relative;width:100%;max-width:360px;aspect-ratio:550/300}
 .doll-wrap svg{width:100%;height:100%;display:block}
@@ -53,6 +56,16 @@ body{background:linear-gradient(145deg,#fff5f0 0%,#f0e6ff 100%);display:flex;fle
 .drag-clone{position:fixed;z-index:1000;pointer-events:none;opacity:.88;transform:scale(1.08);background:#fff;border-radius:14px;padding:8px 4px;display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center;box-shadow:0 8px 30px rgba(0,0,0,.18);width:72px}
 .drag-clone .icon{font-size:32px;line-height:1}
 .drag-clone .label{font-size:12px;font-weight:700;color:#444;line-height:1.2}
+.game-overlay{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(0deg,rgba(0,0,0,.75),transparent);padding:12px;display:flex;flex-direction:column;align-items:center;gap:8px;z-index:3;border-radius:0 0 20px 20px}
+.game-desc{background:rgba(255,255,255,.95);color:#2d3436;padding:10px 14px;border-radius:12px;font-size:13px;font-weight:600;text-align:center;line-height:1.5;max-width:100%}
+.game-btns{display:flex;gap:8px}
+.game-btns button,.game-new{padding:8px 18px;border:none;border-radius:16px;font-size:14px;font-weight:700;cursor:pointer;transition:.2s}
+#gameListen{background:#6c5ce7;color:#fff}
+#gameCheck{background:#00b894;color:#fff}
+.game-new{background:#fdcb6e;color:#2d3436}
+.game-result{background:rgba(255,255,255,.95);padding:8px 12px;border-radius:10px;font-size:12px;font-weight:600;text-align:center;display:none}
+.game-score{color:#fdcb6e;font-size:18px;font-weight:700}
+.game-btns button:active,.game-new:active{transform:scale(.92)}
 @media(max-width:380px){
   .items-grid{grid-template-columns:repeat(3,1fr);gap:6px;padding:8px 8px 12px}
   .item-btn{min-height:64px}
@@ -68,7 +81,11 @@ body{background:linear-gradient(145deg,#fff5f0 0%,#f0e6ff 100%);display:flex;fle
 
 <div class="header">
   <h1><span>👕</span> Fashion English</h1>
-  <div class="gender-btn">
+  <div class="mode-toggle">
+    <button id="modeLearn" class="active" onclick="switchMode('learn')">👕 穿搭</button>
+    <button id="modeGame" onclick="switchMode('game')">🕵️ 搶案</button>
+  </div>
+  <div class="gender-btn" id="headerGender">
     <button id="btnMale" class="active" onclick="setGender('male')">👦 男生</button>
     <button id="btnFemale" onclick="setGender('female')">👧 女生</button>
   </div>
@@ -82,6 +99,16 @@ body{background:linear-gradient(145deg,#fff5f0 0%,#f0e6ff 100%);display:flex;fle
     </div>
     <div class="doll-drop-highlight" id="dropHighlight"></div>
     <div class="pronounce-badge" id="pronounceBadge"></div>
+    <div class="game-overlay" id="gameOverlay" style="display:none">
+      <div class="game-desc" id="gameDesc"></div>
+      <div class="game-btns">
+        <button id="gameListen" onclick="gameListen()">🔊 聽描述</button>
+        <button id="gameCheck" onclick="gameCheck()">✅ 檢查答案</button>
+      </div>
+      <div class="game-result" id="gameResult"></div>
+      <button class="game-new" id="gameNew" onclick="gameNew()">🔄 新案件</button>
+      <div class="game-score">⭐ <span id="gameScore">0</span> 分</div>
+    </div>
     <div class="doll-hint" id="dollHint">👆 先選衣物，再點娃娃穿上</div>
     <div class="voice-widget" id="voiceWidget">
       <button class="voice-btn replay" id="replayBtn" onclick="replayWord()" disabled title="重讀">🔊</button>
@@ -90,7 +117,7 @@ body{background:linear-gradient(145deg,#fff5f0 0%,#f0e6ff 100%);display:flex;fle
   </div>
 </div>
 
-<div class="bottom-panel">
+<div class="bottom-panel" id="bottomPanel">
   <div class="tabs" id="tabs"></div>
   <div class="items-grid" id="itemsGrid"></div>
   <div class="export-bar">
@@ -101,27 +128,27 @@ body{background:linear-gradient(145deg,#fff5f0 0%,#f0e6ff 100%);display:flex;fle
 
 <script>
 const CLOTHING = [
-  {id:'tshirt',name:'T-shirt',cat:'top',gender:'both',color:'#4a90d9',emoji:'👕'},
-  {id:'shirt',name:'Shirt',cat:'top',gender:'male',color:'#fff',emoji:'👔'},
-  {id:'blouse',name:'Blouse',cat:'top',gender:'female',color:'#f8a5c2',emoji:'👚'},
-  {id:'sweater',name:'Sweater',cat:'top',gender:'both',color:'#6ab04c',emoji:'🧶'},
-  {id:'jacket',name:'Jacket',cat:'top',gender:'both',color:'#e17055',emoji:'🧥'},
-  {id:'shorts',name:'Shorts',cat:'bottom',gender:'both',color:'#c4a35a',emoji:'🩳'},
-  {id:'trousers',name:'Trousers',cat:'bottom',gender:'both',color:'#636e72',emoji:'👖'},
-  {id:'jeans',name:'Jeans',cat:'bottom',gender:'both',color:'#2d5a8e',emoji:'👖'},
-  {id:'skirt',name:'Skirt',cat:'bottom',gender:'female',color:'#6c5ce7',emoji:'👗'},
-  {id:'miniskirt',name:'Miniskirt',cat:'bottom',gender:'female',color:'#fd79a8',emoji:'👗'},
-  {id:'sundress',name:'Sun Dress',cat:'dress',gender:'female',color:'#fdcb6e',emoji:'👗'},
-  {id:'eveningdress',name:'Evening Dress',cat:'dress',gender:'female',color:'#9b59b6',emoji:'👘'},
-  {id:'cap',name:'Cap',cat:'accessory',gender:'male',color:'#d63031',emoji:'🧢'},
-  {id:'sunhat',name:'Sun Hat',cat:'accessory',gender:'female',color:'#dfe6e9',emoji:'👒'},
-  {id:'sunglasses',name:'Sunglasses',cat:'accessory',gender:'both',color:'#2d3436',emoji:'🕶️'},
-  {id:'handbag',name:'Handbag',cat:'accessory',gender:'female',color:'#8b4513',emoji:'👜'},
-  {id:'watch',name:'Watch',cat:'accessory',gender:'both',color:'#bdc3c7',emoji:'⌚'},
-  {id:'sneakers',name:'Sneakers',cat:'accessory',gender:'both',color:'#fff',emoji:'👟'},
-  {id:'boots',name:'Boots',cat:'accessory',gender:'both',color:'#4a3728',emoji:'🥾'},
-  {id:'heels',name:'Heels',cat:'accessory',gender:'female',color:'#e74c3c',emoji:'👠'},
-  {id:'necklace',name:'Necklace',cat:'accessory',gender:'female',color:'#f1c40f',emoji:'📿'},
+  {id:'tshirt',name:'T-shirt',cat:'top',gender:'both',color:'#4a90d9',cname:'blue',emoji:'👕'},
+  {id:'shirt',name:'Shirt',cat:'top',gender:'male',color:'#fff',cname:'white',emoji:'👔'},
+  {id:'blouse',name:'Blouse',cat:'top',gender:'female',color:'#f8a5c2',cname:'pink',emoji:'👚'},
+  {id:'sweater',name:'Sweater',cat:'top',gender:'both',color:'#6ab04c',cname:'green',emoji:'🧶'},
+  {id:'jacket',name:'Jacket',cat:'top',gender:'both',color:'#e17055',cname:'red',emoji:'🧥'},
+  {id:'shorts',name:'Shorts',cat:'bottom',gender:'both',color:'#c4a35a',cname:'khaki',emoji:'🩳'},
+  {id:'trousers',name:'Trousers',cat:'bottom',gender:'both',color:'#636e72',cname:'gray',emoji:'👖'},
+  {id:'jeans',name:'Jeans',cat:'bottom',gender:'both',color:'#2d5a8e',cname:'dark blue',emoji:'👖'},
+  {id:'skirt',name:'Skirt',cat:'bottom',gender:'female',color:'#6c5ce7',cname:'purple',emoji:'👗'},
+  {id:'miniskirt',name:'Miniskirt',cat:'bottom',gender:'female',color:'#fd79a8',cname:'hot pink',emoji:'👗'},
+  {id:'sundress',name:'Sun Dress',cat:'dress',gender:'female',color:'#fdcb6e',cname:'yellow',emoji:'👗'},
+  {id:'eveningdress',name:'Evening Dress',cat:'dress',gender:'female',color:'#9b59b6',cname:'deep purple',emoji:'👘'},
+  {id:'cap',name:'Cap',cat:'accessory',gender:'male',color:'#d63031',cname:'red',emoji:'🧢'},
+  {id:'sunhat',name:'Sun Hat',cat:'accessory',gender:'female',color:'#dfe6e9',cname:'white',emoji:'👒'},
+  {id:'sunglasses',name:'Sunglasses',cat:'accessory',gender:'both',color:'#2d3436',cname:'black',emoji:'🕶️'},
+  {id:'handbag',name:'Handbag',cat:'accessory',gender:'female',color:'#8b4513',cname:'brown',emoji:'👜'},
+  {id:'watch',name:'Watch',cat:'accessory',gender:'both',color:'#bdc3c7',cname:'silver',emoji:'⌚'},
+  {id:'sneakers',name:'Sneakers',cat:'accessory',gender:'both',color:'#fff',cname:'white',emoji:'👟'},
+  {id:'boots',name:'Boots',cat:'accessory',gender:'both',color:'#4a3728',cname:'dark brown',emoji:'🥾'},
+  {id:'heels',name:'Heels',cat:'accessory',gender:'female',color:'#e74c3c',cname:'red',emoji:'👠'},
+  {id:'necklace',name:'Necklace',cat:'accessory',gender:'female',color:'#f1c40f',cname:'gold',emoji:'📿'},
 ];
 
 const CATEGORIES = [
@@ -131,7 +158,7 @@ const CATEGORIES = [
   {id:'accessory',label:'配件',emoji:'🎒'},
 ];
 
-let state = {gender:'male',worn:{},activeCat:'top',selectedItem:null,lastWord:''};
+let state = {mode:'learn',gender:'male',worn:{},activeCat:'top',selectedItem:null,lastWord:''};
 
 function drawDoll(gender){
   document.getElementById('dollSvg').innerHTML =
@@ -414,6 +441,7 @@ function readAll(){
 }
 
 function setGender(g){
+  if(state.mode==='game') return;
   state.gender = g;
   state.worn = {};
   state.selectedItem = null;
@@ -482,6 +510,91 @@ document.getElementById('dollWrap').addEventListener('click', e => {
     wearSelected();
   }, 250);
 });
+
+// ===== GAME MODE =====
+let robber = null;
+
+function switchMode(mode){
+  state.mode = mode;
+  document.getElementById('modeLearn').className = mode==='learn'?'active':'';
+  document.getElementById('modeGame').className = mode==='game'?'active':'';
+  document.getElementById('headerGender').style.display = mode==='learn'?'flex':'none';
+  document.getElementById('bottomPanel').style.display = mode==='learn'?'flex':'none';
+  document.getElementById('gameOverlay').style.display = mode==='game'?'flex':'none';
+  document.getElementById('dollHint').style.display = mode==='learn'?'block':'none';
+  document.getElementById('voiceWidget').style.display = mode==='learn'?'flex':'none';
+  if(mode==='learn'){
+    setGender('male');
+  } else {
+    document.getElementById('gameResult').style.display = 'none';
+    if(!robber) gameNew();
+  }
+}
+
+function gameNew(){
+  robber = makeRobber();
+  state.worn = {};
+  state.selectedItem = null;
+  state.gender = robber.gender;
+  document.getElementById('btnMale').className = robber.gender==='male'?'active':'';
+  document.getElementById('btnFemale').className = robber.gender==='female'?'active':'';
+  drawDoll(robber.gender);
+  renderClothing();
+  renderGrid();
+  updateUI();
+  document.getElementById('gameResult').style.display = 'none';
+  document.getElementById('gameResult').innerHTML = '';
+  document.getElementById('gameDesc').textContent = '🔍 銀行發生搶案！請聽目擊者描述，幫搶匪穿上對的衣服。';
+  gameListen();
+}
+
+function makeRobber(){
+  const g = Math.random()>0.5?'male':'female';
+  const tops = CLOTHING.filter(c=>c.cat==='top'&&(c.gender===g||c.gender==='both'));
+  const bottoms = CLOTHING.filter(c=>c.cat==='bottom'&&(c.gender===g||c.gender==='both'));
+  const accs = CLOTHING.filter(c=>c.cat==='accessory'&&(c.gender===g||c.gender==='both'));
+  const top = tops[Math.floor(Math.random()*tops.length)];
+  const bottom = bottoms[Math.floor(Math.random()*bottoms.length)];
+  const n = Math.random()>0.5?2:1;
+  const shuffled = accs.sort(()=>Math.random()-.5).slice(0,n);
+  const o = [top, bottom, ...shuffled];
+  const items = o.map(c=>`a ${c.cname} ${c.name}`);
+  let desc = items.slice(0,-1).join(', ');
+  if(items.length>1) desc += ' and ' + items[items.length-1];
+  const pronoun = g==='male'?'He':'She';
+  return {gender:g, outfit:o, text:`I saw a robber. ${pronoun} wore ${desc}.`};
+}
+
+function gameListen(){
+  if(robber) speakWord(robber.text);
+}
+
+function gameCheck(){
+  if(!robber) return;
+  const wanted = new Set(robber.outfit.map(c=>c.id));
+  const worn = new Set(Object.keys(state.worn));
+  let correct = [], wrong = [], missing = [];
+  robber.outfit.forEach(c=>{
+    if(worn.has(c.id)) correct.push(c);
+    else missing.push(c);
+  });
+  Object.keys(state.worn).forEach(id=>{
+    if(!wanted.has(id)) wrong.push(CLOTHING.find(c=>c.id===id));
+  });
+  const r = document.getElementById('gameResult');
+  r.style.display = 'block';
+  let html = '';
+  if(correct.length) html += '✅ 正確：' + correct.map(c=>c.cname+' '+c.name).join('、') + '<br>';
+  if(missing.length) html += '❌ 漏掉：' + missing.map(c=>c.cname+' '+c.name).join('、') + '<br>';
+  if(wrong.length) html += '⚠️ 多穿：' + wrong.map(c=>c.cname+' '+c.name).join('、') + '<br>';
+  if(!missing.length && !wrong.length) {
+    html = '🎉 完全正確！你抓到搶匪的穿搭了！';
+    const sc = parseInt(document.getElementById('gameScore').textContent) + 1;
+    document.getElementById('gameScore').textContent = sc;
+    setTimeout(()=>gameNew(), 2000);
+  }
+  r.innerHTML = html;
+}
 
 function init(){
   drawDoll('male');
