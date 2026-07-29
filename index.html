@@ -590,7 +590,7 @@ function gameNew(){
   updateUI();
   document.getElementById('gameResult').style.display = 'none';
   document.getElementById('gameResult').innerHTML = '';
-  document.getElementById('gameDesc').textContent = '🔍 銀行發生搶案！請聽目擊者描述，幫搶匪穿上對的衣服。';
+  document.getElementById('gameDesc').textContent = '🔍 銀行搶案發生！請仔細聽目擊者描述，幫搶匪穿上正確的衣服。';
   gameListen();
 }
 
@@ -612,7 +612,13 @@ function makeRobber(){
 }
 
 function gameListen(){
-  if(robber) speakWord(robber.text);
+  if(!robber) return;
+  window.speechSynthesis.cancel();
+  const ut = new SpeechSynthesisUtterance(robber.text);
+  ut.lang = 'en-US';
+  ut.rate = 0.85;
+  ut.pitch = 1.1;
+  window.speechSynthesis.speak(ut);
 }
 
 function gameCheck(){
