@@ -20,19 +20,21 @@ body{background:linear-gradient(145deg,#fff5f0 0%,#f0e6ff 100%);display:flex;fle
 .doll-wrap svg{width:100%;height:100%;display:block}
 .clothing-overlay{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none}
 .clothing-overlay svg{width:100%;height:100%}
+.doll-drop-highlight{position:absolute;top:0;left:0;width:100%;height:100%;border:3px dashed #6c5ce7;border-radius:20px;pointer-events:none;opacity:0;transition:opacity .25s;z-index:4}
+.doll-drop-highlight.show{opacity:1;background:rgba(108,92,231,.08)}
 .bottom-panel{background:#fff;border-radius:20px 20px 0 0;box-shadow:0 -4px 20px rgba(0,0,0,.08);flex-shrink:0;display:flex;flex-direction:column;max-height:45vh;padding-top:8px}
 .tabs{display:flex;padding:0 12px;gap:4px;overflow-x:auto;flex-shrink:0;-webkit-overflow-scrolling:touch}
 .tabs button{padding:6px 14px;border:none;border-radius:16px;background:#f0f0f5;font-size:13px;font-weight:600;cursor:pointer;transition:.2s;white-space:nowrap;color:#888}
 .tabs button.active{background:#6c5ce7;color:#fff}
 .tabs button:active{transform:scale(.95)}
 .items-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:10px 12px 14px;overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch}
-.item-btn{background:#f8f8fc;border:2px solid transparent;border-radius:14px;padding:8px 4px;cursor:pointer;transition:.2s;display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center;min-height:72px}
+.item-btn{background:#f8f8fc;border:2px solid transparent;border-radius:14px;padding:8px 4px;cursor:grab;transition:.2s;display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center;min-height:72px;touch-action:manipulation;user-select:none}
 .item-btn:active{transform:scale(.92)}
 .item-btn.worn{border-color:#6c5ce7;background:#f0edff}
 .item-btn.selected{border-color:#00b894;background:#e6fff8;animation:pulse 1s infinite}
 @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(0,184,148,.4)}50%{box-shadow:0 0 0 6px rgba(0,184,148,0)}}
-.item-btn .icon{font-size:28px;line-height:1}
-.item-btn .label{font-size:11px;font-weight:600;color:#444;line-height:1.2;word-break:break-all}
+.item-btn .icon{font-size:28px;line-height:1;pointer-events:none}
+.item-btn .label{font-size:11px;font-weight:600;color:#444;line-height:1.2;word-break:break-all;pointer-events:none}
 .export-bar{display:flex;align-items:center;justify-content:space-between;padding:6px 12px 10px;flex-shrink:0;gap:8px}
 .export-bar .count{font-size:13px;color:#888}
 .export-btn{padding:7px 16px;border:none;border-radius:14px;background:#00b894;color:#fff;font-size:13px;font-weight:700;cursor:pointer;transition:.2s;display:flex;align-items:center;gap:4px}
@@ -40,8 +42,17 @@ body{background:linear-gradient(145deg,#fff5f0 0%,#f0e6ff 100%);display:flex;fle
 .export-btn:disabled{background:#ccc;cursor:default}
 .pronounce-badge{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(108,92,231,.92);color:#fff;padding:6px 18px;border-radius:20px;font-size:20px;font-weight:700;pointer-events:none;opacity:0;transition:opacity .3s;z-index:5}
 .pronounce-badge.show{opacity:1}
-.doll-hint{position:absolute;bottom:-2px;left:50%;transform:translateX(-50%);color:#aaa;font-size:12px;font-weight:600;white-space:nowrap;pointer-events:none;transition:.3s;background:rgba(255,255,255,.7);padding:2px 12px;border-radius:10px}
+.doll-hint{position:absolute;bottom:-2px;left:50%;transform:translateX(-50%);color:#aaa;font-size:12px;font-weight:600;white-space:nowrap;pointer-events:none;transition:.3s;background:rgba(255,255,255,.7);padding:2px 12px;border-radius:10px;z-index:2}
 .doll-hint.active{color:#00b894}
+.voice-widget{position:absolute;bottom:24px;right:4px;z-index:6;display:flex;flex-direction:column;align-items:center;gap:4px}
+.voice-btn{width:38px;height:38px;border:none;border-radius:50%;background:#6c5ce7;color:#fff;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s;box-shadow:0 2px 8px rgba(108,92,231,.35)}
+.voice-btn:active{transform:scale(.88)}
+.voice-btn.replay{background:#00b894}
+.voice-btn.read-all{background:#fd79a8;width:auto;border-radius:18px;padding:0 10px;font-size:11px;gap:2px}
+.voice-btn:disabled{background:#ccc;box-shadow:none;cursor:default}
+.drag-clone{position:fixed;z-index:1000;pointer-events:none;opacity:.88;transform:scale(1.08);background:#fff;border-radius:14px;padding:8px 4px;display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center;box-shadow:0 8px 30px rgba(0,0,0,.18);width:72px}
+.drag-clone .icon{font-size:32px;line-height:1}
+.drag-clone .label{font-size:12px;font-weight:700;color:#444;line-height:1.2}
 @media(max-width:380px){
   .items-grid{grid-template-columns:repeat(3,1fr);gap:6px;padding:8px 8px 12px}
   .item-btn{min-height:64px}
@@ -64,13 +75,18 @@ body{background:linear-gradient(145deg,#fff5f0 0%,#f0e6ff 100%);display:flex;fle
 </div>
 
 <div class="doll-area" id="dollArea">
-  <div class="doll-wrap">
+  <div class="doll-wrap" id="dollWrap">
     <svg id="dollSvg" viewBox="0 0 200 380" xmlns="http://www.w3.org/2000/svg"></svg>
     <div class="clothing-overlay" id="clothingOverlay">
       <svg viewBox="0 0 200 380" xmlns="http://www.w3.org/2000/svg" id="clothingSvg"></svg>
     </div>
+    <div class="doll-drop-highlight" id="dropHighlight"></div>
     <div class="pronounce-badge" id="pronounceBadge"></div>
-    <div class="doll-hint" id="dollHint">👆 點娃娃穿上</div>
+    <div class="doll-hint" id="dollHint">👆 先選衣物，再點娃娃穿上</div>
+    <div class="voice-widget" id="voiceWidget">
+      <button class="voice-btn replay" id="replayBtn" onclick="replayWord()" disabled title="重讀">🔊</button>
+      <button class="voice-btn read-all" id="readAllBtn" onclick="readAll()" disabled>📢 讀全部</button>
+    </div>
   </div>
 </div>
 
@@ -85,22 +101,18 @@ body{background:linear-gradient(145deg,#fff5f0 0%,#f0e6ff 100%);display:flex;fle
 
 <script>
 const CLOTHING = [
-  // --- TOPS ---
   {id:'tshirt',name:'T-shirt',cat:'top',gender:'both',color:'#4a90d9',emoji:'👕'},
   {id:'shirt',name:'Shirt',cat:'top',gender:'male',color:'#fff',emoji:'👔'},
   {id:'blouse',name:'Blouse',cat:'top',gender:'female',color:'#f8a5c2',emoji:'👚'},
   {id:'sweater',name:'Sweater',cat:'top',gender:'both',color:'#6ab04c',emoji:'🧶'},
   {id:'jacket',name:'Jacket',cat:'top',gender:'both',color:'#e17055',emoji:'🧥'},
-  // --- BOTTOMS ---
   {id:'shorts',name:'Shorts',cat:'bottom',gender:'both',color:'#c4a35a',emoji:'🩳'},
   {id:'trousers',name:'Trousers',cat:'bottom',gender:'both',color:'#636e72',emoji:'👖'},
   {id:'jeans',name:'Jeans',cat:'bottom',gender:'both',color:'#2d5a8e',emoji:'👖'},
   {id:'skirt',name:'Skirt',cat:'bottom',gender:'female',color:'#6c5ce7',emoji:'👗'},
   {id:'miniskirt',name:'Miniskirt',cat:'bottom',gender:'female',color:'#fd79a8',emoji:'👗'},
-  // --- DRESSES ---
   {id:'sundress',name:'Sun Dress',cat:'dress',gender:'female',color:'#fdcb6e',emoji:'👗'},
   {id:'eveningdress',name:'Evening Dress',cat:'dress',gender:'female',color:'#9b59b6',emoji:'👘'},
-  // --- ACCESSORIES ---
   {id:'cap',name:'Cap',cat:'accessory',gender:'male',color:'#d63031',emoji:'🧢'},
   {id:'sunhat',name:'Sun Hat',cat:'accessory',gender:'female',color:'#dfe6e9',emoji:'👒'},
   {id:'sunglasses',name:'Sunglasses',cat:'accessory',gender:'both',color:'#2d3436',emoji:'🕶️'},
@@ -119,25 +131,26 @@ const CATEGORIES = [
   {id:'accessory',label:'配件',emoji:'🎒'},
 ];
 
-let state = {gender:'male',worn:{},activeCat:'top',selectedItem:null};
+let state = {gender:'male',worn:{},activeCat:'top',selectedItem:null,lastWord:''};
 
 function drawDoll(gender){
   const svg = document.getElementById('dollSvg');
   const skin = '#f5d0b0', skinDark = '#d4a574';
-  const hairColor = gender==='male'?'#4a3728':'#8b4513';
+  const hc = gender==='male'?'#4a3728':'#5c2e0e';
 
   let hair = '';
   if(gender==='male'){
     hair = `
-      <path d="M 68 42 Q 68 18 100 18 Q 132 18 132 42" fill="${hairColor}"/>
-      <path d="M 68 42 Q 62 38 60 44 L 58 50 Q 56 56 60 54 L 64 48 Q 66 44 68 42" fill="${hairColor}"/>
-      <path d="M 132 42 Q 138 38 140 44 L 142 50 Q 144 56 140 54 L 136 48 Q 134 44 132 42" fill="${hairColor}"/>`;
+      <path d="M 68 42 Q 68 16 100 16 Q 132 16 132 42" fill="${hc}"/>
+      <path d="M 65 38 Q 58 34 56 42 L 54 48 Q 52 54 56 52 L 60 46 Q 62 42 67 40" fill="${hc}"/>
+      <path d="M 135 38 Q 142 34 144 42 L 146 48 Q 148 54 144 52 L 140 46 Q 138 42 133 40" fill="${hc}"/>`;
   } else {
     hair = `
-      <path d="M 68 42 Q 68 10 100 10 Q 132 10 132 42" fill="${hairColor}"/>
-      <ellipse cx="64" cy="52" rx="6" ry="20" fill="${hairColor}" transform="rotate(-10,64,52)"/>
-      <ellipse cx="136" cy="52" rx="6" ry="20" fill="${hairColor}" transform="rotate(10,136,52)"/>
-      <path d="M 100 18 Q 130 18 140 75 Q 135 82 130 78 Q 125 70 120 68" fill="${hairColor}" opacity=".8"/>`;
+      <path d="M 66 42 Q 66 6 100 6 Q 134 6 134 42" fill="${hc}"/>
+      <path d="M 68 38 Q 48 60 46 120 Q 44 170 52 170 Q 60 168 62 140 Q 66 90 72 42" fill="${hc}"/>
+      <path d="M 132 38 Q 152 60 154 120 Q 156 170 148 170 Q 140 168 138 140 Q 134 90 128 42" fill="${hc}"/>
+      <path d="M 82 20 Q 100 10 118 20 Q 128 80 135 175 Q 132 185 120 180 Q 100 175 80 180 Q 68 185 65 175 Q 72 80 82 20" fill="${hc}" opacity=".8"/>
+      <path d="M 72 40 Q 78 28 100 28 Q 122 28 128 40 Q 132 46 128 44 Q 120 36 100 36 Q 80 36 72 44 Q 68 46 72 40" fill="${hc}"/>`;
   }
 
   svg.innerHTML = `
@@ -183,9 +196,7 @@ function renderClothing(){
   const svg = document.getElementById('clothingSvg');
   let html = '';
   const entries = Object.entries(state.worn).sort((a,b)=>getLayer(a[0])-getLayer(b[0]));
-  for(const [id] of entries){
-    html += getClothingSvg(id);
-  }
+  for(const [id] of entries) html += getClothingSvg(id);
   svg.innerHTML = html;
 }
 
@@ -207,7 +218,7 @@ function getClothingSvg(id){
     case 'shorts':
       return `<g id="worn-${id}"><path d="M 78 185 L 122 185 L 118 250 L 82 250 Z" fill="${c}" stroke="#a0843a" stroke-width="1" opacity=".92"/><path d="M 78 185 L 82 250 L 72 248 L 76 185" fill="${c}" stroke="#a0843a" stroke-width="1" opacity=".92"/><path d="M 122 185 L 118 250 L 128 248 L 124 185" fill="${c}" stroke="#a0843a" stroke-width="1" opacity=".92"/></g>`;
     case 'trousers':
-      return `<g id="worn-${id}"><path d="M 78 185 L 122 185 L 124 330 L 120 335 L 80 335 L 76 330 Z" fill="${c}" stroke="#4a4a4a" stroke-width="1" opacity=".92"/><rect x="76" y="185" width="48" height="150" fill="${c}" opacity=".92"/></g>`;
+      return `<g id="worn-${id}"><path d="M 78 185 L 122 185 L 124 330 L 120 335 L 80 335 L 76 330 Z" fill="${c}" stroke="#4a4a4a" stroke-width="1" opacity=".92"/></g>`;
     case 'jeans':
       return `<g id="worn-${id}"><path d="M 78 185 L 122 185 L 124 330 L 120 335 L 80 335 L 76 330 Z" fill="${c}" stroke="#1a3a5c" stroke-width="1" opacity=".92"/><line x1="90" y1="185" x2="88" y2="330" stroke="#1a3a5c" stroke-width=".5" opacity=".4"/><line x1="110" y1="185" x2="112" y2="330" stroke="#1a3a5c" stroke-width=".5" opacity=".4"/></g>`;
     case 'skirt':
@@ -236,8 +247,7 @@ function getClothingSvg(id){
       return `<g id="worn-${id}"><path d="M 64 338 L 88 338 L 82 348 L 66 348 Z" fill="${c}" stroke="#a02020" stroke-width="1"/><path d="M 112 338 L 136 338 L 130 348 L 114 348 Z" fill="${c}" stroke="#a02020" stroke-width="1"/><line x1="68" y1="338" x2="68" y2="330" stroke="${c}" stroke-width="2"/><line x1="132" y1="338" x2="132" y2="330" stroke="${c}" stroke-width="2"/></g>`;
     case 'necklace':
       return `<g id="worn-${id}"><path d="M 84 80 Q 100 110 116 80" fill="none" stroke="${c}" stroke-width="2"/><circle cx="100" cy="110" r="4" fill="${c}" stroke="#d4a017" stroke-width="1"/><circle cx="94" cy="102" r="1.5" fill="${c}"/><circle cx="106" cy="102" r="1.5" fill="${c}"/></g>`;
-    default:
-      return '';
+    default: return '';
   }
 }
 
@@ -246,8 +256,7 @@ function getItemsForGender(){
 }
 
 function renderTabs(){
-  const container = document.getElementById('tabs');
-  container.innerHTML = CATEGORIES.map(c =>
+  document.getElementById('tabs').innerHTML = CATEGORIES.map(c =>
     `<button class="${state.activeCat===c.id?'active':''}" onclick="switchCat('${c.id}')">${c.emoji} ${c.label}</button>`
   ).join('');
 }
@@ -265,11 +274,88 @@ function renderGrid(){
     let cls = 'item-btn';
     if(worn) cls += ' worn';
     if(sel) cls += ' selected';
-    return `<button class="${cls}" onclick="clickItem('${i.id}')">
+    return `<button class="${cls}" data-id="${i.id}">
       <span class="icon">${i.emoji}</span>
       <span class="label">${i.name}</span>
     </button>`;
   }).join('');
+
+  document.querySelectorAll('#itemsGrid .item-btn').forEach(btn => {
+    btn.addEventListener('mousedown', onPointerDown);
+    btn.addEventListener('touchstart', onPointerDown, {passive:true});
+  });
+}
+
+let drag = null;
+
+function getPos(e){
+  if(e.touches && e.touches.length) return {x:e.touches[0].clientX, y:e.touches[0].clientY};
+  if(e.changedTouches && e.changedTouches.length) return {x:e.changedTouches[0].clientX, y:e.changedTouches[0].clientY};
+  return {x:e.clientX, y:e.clientY};
+}
+
+function onPointerDown(e){
+  const btn = e.currentTarget;
+  const id = btn.dataset.id;
+  const item = CLOTHING.find(c=>c.id===id);
+  if(!item) return;
+
+  const pos = getPos(e);
+  drag = {id,startX:pos.x,startY:pos.y,isDragging:false,clone:null,btn,item};
+
+  document.addEventListener('mousemove', onPointerMove);
+  document.addEventListener('mouseup', onPointerUp);
+  document.addEventListener('touchmove', onPointerMove, {passive:false});
+  document.addEventListener('touchend', onPointerUp);
+  document.addEventListener('touchcancel', onPointerUp);
+}
+
+function onPointerMove(e){
+  if(!drag) return;
+  const pos = getPos(e);
+  const dx = pos.x - drag.startX;
+  const dy = pos.y - drag.startY;
+
+  if(!drag.isDragging && (dx*dx + dy*dy) > 100){
+    drag.isDragging = true;
+    const clone = document.createElement('div');
+    clone.className = 'drag-clone';
+    clone.innerHTML = `<span class="icon">${drag.item.emoji}</span><span class="label">${drag.item.name}</span>`;
+    document.body.appendChild(clone);
+    drag.clone = clone;
+    document.getElementById('dropHighlight').classList.add('show');
+    speakWord(drag.item.name);
+  }
+
+  if(drag.isDragging && drag.clone){
+    drag.clone.style.left = (pos.x - 36) + 'px';
+    drag.clone.style.top = (pos.y - 40) + 'px';
+    const wrap = document.getElementById('dollWrap');
+    const r = wrap.getBoundingClientRect();
+    document.getElementById('dropHighlight').classList.toggle('show',
+      pos.x>=r.left && pos.x<=r.right && pos.y>=r.top && pos.y<=r.bottom);
+  }
+  if(e.cancelable) e.preventDefault();
+}
+
+function onPointerUp(e){
+  if(!drag) return;
+  if(drag.isDragging){
+    const pos = getPos(e);
+    const wrap = document.getElementById('dollWrap');
+    const r = wrap.getBoundingClientRect();
+    document.getElementById('dropHighlight').classList.remove('show');
+    if(pos.x>=r.left && pos.x<=r.right && pos.y>=r.top && pos.y<=r.bottom){
+      wearItemById(drag.id);
+    }
+    if(drag.clone && drag.clone.parentNode) drag.clone.parentNode.removeChild(drag.clone);
+  }
+  document.removeEventListener('mousemove', onPointerMove);
+  document.removeEventListener('mouseup', onPointerUp);
+  document.removeEventListener('touchmove', onPointerMove);
+  document.removeEventListener('touchend', onPointerUp);
+  document.removeEventListener('touchcancel', onPointerUp);
+  drag = null;
 }
 
 function switchCat(cat){
@@ -285,7 +371,7 @@ function updateHint(){
     hint.textContent = '👉 點娃娃穿 ' + (item?item.name:'') + ' 👈';
     hint.className = 'doll-hint active';
   } else {
-    hint.textContent = '👆 先選衣物，再點娃娃穿上';
+    hint.textContent = '👇 拖曳衣物到娃娃身上';
     hint.className = 'doll-hint';
   }
 }
@@ -297,9 +383,7 @@ function clickItem(id){
     delete state.worn[id];
     if(state.selectedItem === id) state.selectedItem = null;
     renderClothing();
-    updateCount();
-    renderGrid();
-    updateHint();
+    updateUI();
     return;
   }
   state.selectedItem = (state.selectedItem === id) ? null : id;
@@ -307,60 +391,70 @@ function clickItem(id){
   updateHint();
 }
 
-function wearSelected(){
-  const id = state.selectedItem;
-  if(!id) return;
+function wearItemById(id){
   const item = CLOTHING.find(c=>c.id===id);
-  if(!item) return;
-  if(state.worn[id]) return;
+  if(!item || state.worn[id]) return;
   if(item.cat==='dress'){
-    for(const key of Object.keys(state.worn)){
-      const it = CLOTHING.find(c=>c.id===key);
-      if(it && (it.cat==='top'||it.cat==='bottom')) delete state.worn[key];
-    }
+    Object.keys(state.worn).forEach(k=>{
+      const it=CLOTHING.find(c=>c.id===k);
+      if(it && (it.cat==='top'||it.cat==='bottom')) delete state.worn[k];
+    });
   }
   if(item.cat==='top'||item.cat==='bottom'){
-    for(const key of Object.keys(state.worn)){
-      const it = CLOTHING.find(c=>c.id===key);
-      if(it && it.cat==='dress') delete state.worn[key];
-    }
-  }
-  if(item.cat==='top'){
-    for(const key of Object.keys(state.worn)){
-      const it = CLOTHING.find(c=>c.id===key);
-      if(it && it.cat==='top') delete state.worn[key];
-    }
-  }
-  if(item.cat==='bottom'){
-    for(const key of Object.keys(state.worn)){
-      const it = CLOTHING.find(c=>c.id===key);
-      if(it && it.cat==='bottom') delete state.worn[key];
-    }
+    Object.keys(state.worn).forEach(k=>{
+      const it=CLOTHING.find(c=>c.id===k);
+      if(it && it.cat==='dress') delete state.worn[k];
+      if(it && it.cat===item.cat) delete state.worn[k];
+    });
   }
   state.worn[id] = true;
   state.selectedItem = null;
   renderClothing();
   speakWord(item.name);
-  updateCount();
-  renderGrid();
-  updateHint();
+  updateUI();
+}
+
+function wearSelected(){
+  const id = state.selectedItem;
+  if(!id) return;
+  wearItemById(id);
 }
 
 function speakWord(word){
+  state.lastWord = word;
   if(!window.speechSynthesis) return;
   window.speechSynthesis.cancel();
   const ut = new SpeechSynthesisUtterance(word);
   ut.lang = 'en-US';
   ut.rate = 0.85;
   ut.pitch = 1.1;
-  const voices = window.speechSynthesis.getVoices();
-  const enVoice = voices.find(v=>v.lang.startsWith('en')&&v.name.includes('Google'));
-  if(enVoice) ut.voice = enVoice;
   window.speechSynthesis.speak(ut);
   const badge = document.getElementById('pronounceBadge');
   badge.textContent = '🔊 ' + word;
   badge.className = 'pronounce-badge show';
-  setTimeout(()=>{badge.className='pronounce-badge'}, 1200);
+  clearTimeout(badge._t);
+  badge._t = setTimeout(()=>{badge.className='pronounce-badge'}, 1200);
+  updateVoiceWidget();
+}
+
+function replayWord(){
+  if(state.lastWord) speakWord(state.lastWord);
+}
+
+function readAll(){
+  const words = Object.keys(state.worn).map(id=>{
+    const item=CLOTHING.find(c=>c.id===id);
+    return item?item.name:null;
+  }).filter(Boolean);
+  if(!words.length) return;
+  let i=0;
+  function next(){
+    if(i>=words.length) return;
+    speakWord(words[i]);
+    i++;
+    setTimeout(next, 1400);
+  }
+  next();
 }
 
 function setGender(g){
@@ -372,14 +466,21 @@ function setGender(g){
   drawDoll(g);
   renderClothing();
   renderGrid();
-  updateCount();
-  updateHint();
+  updateUI();
 }
 
-function updateCount(){
+function updateUI(){
   const n = Object.keys(state.worn).length;
   document.getElementById('wordCount').textContent = '📖 已穿 ' + n + ' 件';
   document.getElementById('exportBtn').disabled = n===0;
+  updateHint();
+  updateVoiceWidget();
+}
+
+function updateVoiceWidget(){
+  const n = Object.keys(state.worn).length;
+  document.getElementById('replayBtn').disabled = !state.lastWord;
+  document.getElementById('readAllBtn').disabled = n===0;
 }
 
 function exportWords(){
@@ -401,20 +502,20 @@ function exportWords(){
   URL.revokeObjectURL(a.href);
 }
 
-document.getElementById('dollArea').addEventListener('click', function(e){
-  if(e.target.closest('.doll-wrap')){
-    wearSelected();
-  }
+document.getElementById('itemsGrid').addEventListener('click', e => {
+  const btn = e.target.closest('.item-btn');
+  if(btn && btn.dataset.id) clickItem(btn.dataset.id);
 });
 
-// Init
+document.getElementById('dollWrap').addEventListener('click', e => {
+  wearSelected();
+});
+
 function init(){
   drawDoll('male');
   renderTabs();
   renderGrid();
-  updateCount();
-  updateHint();
-  // Load voices
+  updateUI();
   if(window.speechSynthesis){
     window.speechSynthesis.getVoices();
     window.speechSynthesis.onvoiceschanged = ()=>{
