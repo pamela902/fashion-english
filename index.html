@@ -507,8 +507,24 @@ document.getElementById('itemsGrid').addEventListener('click', e => {
   if(btn && btn.dataset.id) clickItem(btn.dataset.id);
 });
 
+let dollClickTimer = null;
 document.getElementById('dollWrap').addEventListener('click', e => {
-  wearSelected();
+  if(dollClickTimer){
+    clearTimeout(dollClickTimer);
+    dollClickTimer = null;
+    const keys = Object.keys(state.worn);
+    if(keys.length){
+      const lastId = keys[keys.length - 1];
+      delete state.worn[lastId];
+      renderClothing();
+      updateUI();
+    }
+    return;
+  }
+  dollClickTimer = setTimeout(() => {
+    dollClickTimer = null;
+    wearSelected();
+  }, 250);
 });
 
 function init(){
