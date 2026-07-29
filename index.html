@@ -122,7 +122,7 @@ body{background:linear-gradient(145deg,#fff5f0 0%,#f0e6ff 100%);display:flex;fle
 <div class="bottom-panel" id="bottomPanel">
   <div class="tabs" id="tabs"></div>
   <div class="items-grid" id="itemsGrid"></div>
-  <div class="export-bar">
+  <div class="export-bar" id="exportBar">
     <span class="count" id="wordCount">📖 已穿 0 件</span>
     <button class="export-btn" id="exportBtn" onclick="exportWords()" disabled>📋 匯出單字</button>
   </div>
@@ -565,7 +565,7 @@ function switchMode(mode){
   document.getElementById('modeLearn').className = mode==='learn'?'active':'';
   document.getElementById('modeGame').className = mode==='game'?'active':'';
   document.getElementById('headerGender').style.display = mode==='learn'?'flex':'none';
-  document.getElementById('bottomPanel').style.display = mode==='learn'?'flex':'none';
+  document.getElementById('exportBar').style.display = mode==='learn'?'flex':'none';
   document.getElementById('gameOverlay').style.display = mode==='game'?'flex':'none';
   document.getElementById('dollHint').style.display = mode==='learn'?'block':'none';
   document.getElementById('voiceWidget').style.display = mode==='learn'?'flex':'none';
@@ -574,6 +574,8 @@ function switchMode(mode){
   } else {
     document.getElementById('gameResult').style.display = 'none';
     if(!robber) gameNew();
+    renderTabs();
+    renderGrid();
   }
 }
 
