@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Fashion English - 穿搭學英文</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,system-ui,sans-serif}
+body{background:linear-gradient(145deg,#fff5f0 0%,#f0e6ff 100%);display:flex;flex-direction:column}
+.header{background:#fff;padding:8px 16px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 12px rgba(0,0,0,.08);z-index:10;flex-shrink:0;min-height:52px}
+.header h1{font-size:18px;font-weight:700;color:#6c5ce7;display:flex;align-items:center;gap:6px}
+.header h1 span{font-size:20px}
+.gender-btn{display:flex;gap:6px}
+.gender-btn button{padding:6px 16px;border:2px solid #ddd;border-radius:20px;background:#fff;font-size:14px;font-weight:600;cursor:pointer;transition:.2s;color:#666}
+.gender-btn button.active{border-color:#6c5ce7;background:#6c5ce7;color:#fff}
+.gender-btn button:active{transform:scale(.95)}
+.doll-area{flex:1;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;min-height:0}
+.doll-wrap{position:relative;width:100%;max-width:280px;aspect-ratio:200/380}
+.doll-wrap svg{width:100%;height:100%;display:block}
+.clothing-overlay{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none}
+.clothing-overlay svg{width:100%;height:100%}
+.bottom-panel{background:#fff;border-radius:20px 20px 0 0;box-shadow:0 -4px 20px rgba(0,0,0,.08);flex-shrink:0;display:flex;flex-direction:column;max-height:45vh;padding-top:8px}
+.tabs{display:flex;padding:0 12px;gap:4px;overflow-x:auto;flex-shrink:0;-webkit-overflow-scrolling:touch}
+.tabs button{padding:6px 14px;border:none;border-radius:16px;background:#f0f0f5;font-size:13px;font-weight:600;cursor:pointer;transition:.2s;white-space:nowrap;color:#888}
+.tabs button.active{background:#6c5ce7;color:#fff}
+.tabs button:active{transform:scale(.95)}
+.items-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;padding:10px 12px 14px;overflow-y:auto;flex:1;-webkit-overflow-scrolling:touch}
+.item-btn{background:#f8f8fc;border:2px solid transparent;border-radius:14px;padding:8px 4px;cursor:pointer;transition:.2s;display:flex;flex-direction:column;align-items:center;gap:2px;text-align:center;min-height:72px}
+.item-btn:active{transform:scale(.92)}
+.item-btn.worn{border-color:#6c5ce7;background:#f0edff}
+.item-btn.selected{border-color:#00b894;background:#e6fff8;animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(0,184,148,.4)}50%{box-shadow:0 0 0 6px rgba(0,184,148,0)}}
+.item-btn .icon{font-size:28px;line-height:1}
+.item-btn .label{font-size:11px;font-weight:600;color:#444;line-height:1.2;word-break:break-all}
+.export-bar{display:flex;align-items:center;justify-content:space-between;padding:6px 12px 10px;flex-shrink:0;gap:8px}
+.export-bar .count{font-size:13px;color:#888}
+.export-btn{padding:7px 16px;border:none;border-radius:14px;background:#00b894;color:#fff;font-size:13px;font-weight:700;cursor:pointer;transition:.2s;display:flex;align-items:center;gap:4px}
+.export-btn:active{transform:scale(.95)}
+.export-btn:disabled{background:#ccc;cursor:default}
+.pronounce-badge{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(108,92,231,.92);color:#fff;padding:6px 18px;border-radius:20px;font-size:20px;font-weight:700;pointer-events:none;opacity:0;transition:opacity .3s;z-index:5}
+.pronounce-badge.show{opacity:1}
+.doll-hint{position:absolute;bottom:-2px;left:50%;transform:translateX(-50%);color:#aaa;font-size:12px;font-weight:600;white-space:nowrap;pointer-events:none;transition:.3s;background:rgba(255,255,255,.7);padding:2px 12px;border-radius:10px}
+.doll-hint.active{color:#00b894}
+@media(max-width:380px){
+  .items-grid{grid-template-columns:repeat(3,1fr);gap:6px;padding:8px 8px 12px}
+  .item-btn{min-height:64px}
+  .item-btn .icon{font-size:24px}
+  .header h1{font-size:16px}
+}
+@media(min-height:800px){
+  .bottom-panel{max-height:38vh}
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1><span>👕</span> Fashion English</h1>
+  <div class="gender-btn">
+    <button id="btnMale" class="active" onclick="setGender('male')">👦 男生</button>
+    <button id="btnFemale" onclick="setGender('female')">👧 女生</button>
+  </div>
+</div>
+
+<div class="doll-area" id="dollArea">
+  <div class="doll-wrap">
+    <svg id="dollSvg" viewBox="0 0 200 380" xmlns="http://www.w3.org/2000/svg"></svg>
+    <div class="clothing-overlay" id="clothingOverlay">
+      <svg viewBox="0 0 200 380" xmlns="http://www.w3.org/2000/svg" id="clothingSvg"></svg>
+    </div>
+    <div class="pronounce-badge" id="pronounceBadge"></div>
+    <div class="doll-hint" id="dollHint">👆 點娃娃穿上</div>
+  </div>
+</div>
+
+<div class="bottom-panel">
+  <div class="tabs" id="tabs"></div>
+  <div class="items-grid" id="itemsGrid"></div>
+  <div class="export-bar">
+    <span class="count" id="wordCount">📖 已穿 0 件</span>
+    <button class="export-btn" id="exportBtn" onclick="exportWords()" disabled>📋 匯出單字</button>
+  </div>
+</div>
+
+<script>
+const CLOTHING = [
+  // --- TOPS ---
+  {id:'tshirt',name:'T-shirt',cat:'top',gender:'both',color:'#4a90d9',emoji:'👕'},
+  {id:'shirt',name:'Shirt',cat:'top',gender:'male',color:'#fff',emoji:'👔'},
+  {id:'blouse',name:'Blouse',cat:'top',gender:'female',color:'#f8a5c2',emoji:'👚'},
+  {id:'sweater',name:'Sweater',cat:'top',gender:'both',color:'#6ab04c',emoji:'🧶'},
+  {id:'jacket',name:'Jacket',cat:'top',gender:'both',color:'#e17055',emoji:'🧥'},
+  // --- BOTTOMS ---
+  {id:'shorts',name:'Shorts',cat:'bottom',gender:'both',color:'#c4a35a',emoji:'🩳'},
+  {id:'trousers',name:'Trousers',cat:'bottom',gender:'both',color:'#636e72',emoji:'👖'},
+  {id:'jeans',name:'Jeans',cat:'bottom',gender:'both',color:'#2d5a8e',emoji:'👖'},
+  {id:'skirt',name:'Skirt',cat:'bottom',gender:'female',color:'#6c5ce7',emoji:'👗'},
+  {id:'miniskirt',name:'Miniskirt',cat:'bottom',gender:'female',color:'#fd79a8',emoji:'👗'},
+  // --- DRESSES ---
+  {id:'sundress',name:'Sun Dress',cat:'dress',gender:'female',color:'#fdcb6e',emoji:'👗'},
+  {id:'eveningdress',name:'Evening Dress',cat:'dress',gender:'female',color:'#9b59b6',emoji:'👘'},
+  // --- ACCESSORIES ---
+  {id:'cap',name:'Cap',cat:'accessory',gender:'male',color:'#d63031',emoji:'🧢'},
+  {id:'sunhat',name:'Sun Hat',cat:'accessory',gender:'female',color:'#dfe6e9',emoji:'👒'},
+  {id:'sunglasses',name:'Sunglasses',cat:'accessory',gender:'both',color:'#2d3436',emoji:'🕶️'},
+  {id:'handbag',name:'Handbag',cat:'accessory',gender:'female',color:'#8b4513',emoji:'👜'},
+  {id:'watch',name:'Watch',cat:'accessory',gender:'both',color:'#bdc3c7',emoji:'⌚'},
+  {id:'sneakers',name:'Sneakers',cat:'accessory',gender:'both',color:'#fff',emoji:'👟'},
+  {id:'boots',name:'Boots',cat:'accessory',gender:'both',color:'#4a3728',emoji:'🥾'},
+  {id:'heels',name:'Heels',cat:'accessory',gender:'female',color:'#e74c3c',emoji:'👠'},
+  {id:'necklace',name:'Necklace',cat:'accessory',gender:'female',color:'#f1c40f',emoji:'📿'},
+];
+
+const CATEGORIES = [
+  {id:'top',label:'上衣',emoji:'👔'},
+  {id:'bottom',label:'下身',emoji:'👖'},
+  {id:'dress',label:'洋裝',emoji:'👗'},
+  {id:'accessory',label:'配件',emoji:'🎒'},
+];
+
+let state = {gender:'male',worn:{},activeCat:'top',selectedItem:null};
+
+function drawDoll(gender){
+  const svg = document.getElementById('dollSvg');
+  const skin = '#f5d0b0', skinDark = '#d4a574';
+  const hairColor = gender==='male'?'#4a3728':'#8b4513';
+
+  let hair = '';
+  if(gender==='male'){
+    hair = `
+      <path d="M 68 42 Q 68 18 100 18 Q 132 18 132 42" fill="${hairColor}"/>
+      <path d="M 68 42 Q 62 38 60 44 L 58 50 Q 56 56 60 54 L 64 48 Q 66 44 68 42" fill="${hairColor}"/>
+      <path d="M 132 42 Q 138 38 140 44 L 142 50 Q 144 56 140 54 L 136 48 Q 134 44 132 42" fill="${hairColor}"/>`;
+  } else {
+    hair = `
+      <path d="M 68 42 Q 68 10 100 10 Q 132 10 132 42" fill="${hairColor}"/>
+      <ellipse cx="64" cy="52" rx="6" ry="20" fill="${hairColor}" transform="rotate(-10,64,52)"/>
+      <ellipse cx="136" cy="52" rx="6" ry="20" fill="${hairColor}" transform="rotate(10,136,52)"/>
+      <path d="M 100 18 Q 130 18 140 75 Q 135 82 130 78 Q 125 70 120 68" fill="${hairColor}" opacity=".8"/>`;
+  }
+
+  svg.innerHTML = `
+    <defs>
+      <linearGradient id="skinGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="${skin}"/>
+        <stop offset="100%" stop-color="#e8c4a0"/>
+      </linearGradient>
+    </defs>
+    <g id="doll-body">
+      ${hair}
+      <circle cx="100" cy="48" r="30" fill="url(#skinGrad)" stroke="${skinDark}" stroke-width="1.5"/>
+      <circle cx="89" cy="44" r="2.5" fill="#2d3436"/>
+      <circle cx="111" cy="44" r="2.5" fill="#2d3436"/>
+      <circle cx="89" cy="44" r="1" fill="#fff"/>
+      <circle cx="111" cy="44" r="1" fill="#fff"/>
+      <path d="M 93 52 Q 100 57 107 52" fill="none" stroke="#c97" stroke-width="1.5" stroke-linecap="round"/>
+      <rect x="93" y="78" width="14" height="12" rx="4" fill="url(#skinGrad)" stroke="${skinDark}" stroke-width="1"/>
+      <path d="M 72 92 L 128 92 L 120 185 L 80 185 Z" fill="url(#skinGrad)" stroke="${skinDark}" stroke-width="1.5"/>
+      <path d="M 72 95 L 44 210" stroke="${skin}" stroke-width="18" stroke-linecap="round" fill="none"/>
+      <path d="M 72 95 L 44 210" stroke="${skinDark}" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+      <path d="M 128 95 L 156 210" stroke="${skin}" stroke-width="18" stroke-linecap="round" fill="none"/>
+      <path d="M 128 95 L 156 210" stroke="${skinDark}" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+      <path d="M 84 185 L 78 335" stroke="${skin}" stroke-width="22" stroke-linecap="round" fill="none"/>
+      <path d="M 84 185 L 78 335" stroke="${skinDark}" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+      <path d="M 116 185 L 122 335" stroke="${skin}" stroke-width="22" stroke-linecap="round" fill="none"/>
+      <path d="M 116 185 L 122 335" stroke="${skinDark}" stroke-width="1.5" stroke-linecap="round" fill="none"/>
+      <ellipse cx="76" cy="340" rx="14" ry="7" fill="url(#skinGrad)" stroke="${skinDark}" stroke-width="1"/>
+      <ellipse cx="124" cy="340" rx="14" ry="7" fill="url(#skinGrad)" stroke="${skinDark}" stroke-width="1"/>
+    </g>`;
+}
+
+function getLayer(id){
+  const item = CLOTHING.find(c=>c.id===id);
+  if(!item) return 5;
+  if(item.cat==='dress') return 3;
+  if(item.cat==='top') return 2;
+  if(item.cat==='bottom') return 1;
+  return 5;
+}
+
+function renderClothing(){
+  const svg = document.getElementById('clothingSvg');
+  let html = '';
+  const entries = Object.entries(state.worn).sort((a,b)=>getLayer(a[0])-getLayer(b[0]));
+  for(const [id] of entries){
+    html += getClothingSvg(id);
+  }
+  svg.innerHTML = html;
+}
+
+function getClothingSvg(id){
+  const item = CLOTHING.find(c=>c.id===id);
+  if(!item) return '';
+  const c = item.color;
+  switch(id){
+    case 'tshirt':
+      return `<g id="worn-${id}"><path d="M 70 90 L 130 90 L 125 190 L 75 190 Z" fill="${c}" stroke="#333" stroke-width="1" opacity=".92"/><path d="M 70 92 L 48 115 L 42 108 L 68 88" fill="${c}" stroke="#333" stroke-width="1" opacity=".92"/><path d="M 130 92 L 152 115 L 158 108 L 132 88" fill="${c}" stroke="#333" stroke-width="1" opacity=".92"/><path d="M 90 90 L 100 102 L 110 90" fill="none" stroke="#fff" stroke-width="1.5"/></g>`;
+    case 'shirt':
+      return `<g id="worn-${id}"><path d="M 70 88 L 130 88 L 125 190 L 75 190 Z" fill="${c}" stroke="#ddd" stroke-width="1" opacity=".92"/><path d="M 70 90 L 48 113 L 42 106 L 68 86" fill="${c}" stroke="#ddd" stroke-width="1" opacity=".92"/><path d="M 130 90 L 152 113 L 158 106 L 132 86" fill="${c}" stroke="#ddd" stroke-width="1" opacity=".92"/><path d="M 96 88 L 96 60" fill="none" stroke="#ddd" stroke-width="1"/><path d="M 104 88 L 104 60" fill="none" stroke="#ddd" stroke-width="1"/><path d="M 90 88 L 110 88" fill="none" stroke="#ddd" stroke-width="1"/><circle cx="100" cy="52" r="2" fill="#e74c3c"/></g>`;
+    case 'blouse':
+      return `<g id="worn-${id}"><path d="M 70 90 Q 100 82 130 90 L 125 190 L 75 190 Z" fill="${c}" stroke="#e84393" stroke-width="1" opacity=".9"/><path d="M 70 92 L 48 115 L 42 108 L 68 88" fill="${c}" stroke="#e84393" stroke-width="1" opacity=".9"/><path d="M 130 92 L 152 115 L 158 108 L 132 88" fill="${c}" stroke="#e84393" stroke-width="1" opacity=".9"/><circle cx="85" cy="96" r="3" fill="#fff" opacity=".5"/><circle cx="100" cy="98" r="3" fill="#fff" opacity=".5"/><circle cx="115" cy="96" r="3" fill="#fff" opacity=".5"/></g>`;
+    case 'sweater':
+      return `<g id="worn-${id}"><path d="M 68 88 Q 100 82 132 88 L 127 192 L 73 192 Z" fill="${c}" stroke="#2d7d2d" stroke-width="1.5" opacity=".92"/><path d="M 68 90 L 46 118 L 40 111 L 66 86" fill="${c}" stroke="#2d7d2d" stroke-width="1.5" opacity=".92"/><path d="M 132 90 L 154 118 L 160 111 L 134 86" fill="${c}" stroke="#2d7d2d" stroke-width="1.5" opacity=".92"/><path d="M 88 88 L 100 106 L 112 88" fill="none" stroke="#fff" stroke-width="2"/><line x1="80" y1="130" x2="120" y2="130" stroke="#fff" stroke-width="1" opacity=".3"/><line x1="80" y1="140" x2="120" y2="140" stroke="#fff" stroke-width="1" opacity=".3"/><line x1="80" y1="150" x2="120" y2="150" stroke="#fff" stroke-width="1" opacity=".3"/></g>`;
+    case 'jacket':
+      return `<g id="worn-${id}"><path d="M 68 92 L 132 92 L 128 190 L 72 190 Z" fill="${c}" stroke="#c0392b" stroke-width="1" opacity=".9"/><path d="M 68 94 L 44 120 L 38 113 L 64 90" fill="${c}" stroke="#c0392b" stroke-width="1" opacity=".9"/><path d="M 132 94 L 156 120 L 162 113 L 136 90" fill="${c}" stroke="#c0392b" stroke-width="1" opacity=".9"/><line x1="100" y1="92" x2="100" y2="185" stroke="#c0392b" stroke-width="1.5" stroke-dasharray="3,2"/><line x1="92" y1="185" x2="108" y2="185" stroke="#c0392b" stroke-width="1.5"/></g>`;
+    case 'shorts':
+      return `<g id="worn-${id}"><path d="M 78 185 L 122 185 L 118 250 L 82 250 Z" fill="${c}" stroke="#a0843a" stroke-width="1" opacity=".92"/><path d="M 78 185 L 82 250 L 72 248 L 76 185" fill="${c}" stroke="#a0843a" stroke-width="1" opacity=".92"/><path d="M 122 185 L 118 250 L 128 248 L 124 185" fill="${c}" stroke="#a0843a" stroke-width="1" opacity=".92"/></g>`;
+    case 'trousers':
+      return `<g id="worn-${id}"><path d="M 78 185 L 122 185 L 124 330 L 120 335 L 80 335 L 76 330 Z" fill="${c}" stroke="#4a4a4a" stroke-width="1" opacity=".92"/><rect x="76" y="185" width="48" height="150" fill="${c}" opacity=".92"/></g>`;
+    case 'jeans':
+      return `<g id="worn-${id}"><path d="M 78 185 L 122 185 L 124 330 L 120 335 L 80 335 L 76 330 Z" fill="${c}" stroke="#1a3a5c" stroke-width="1" opacity=".92"/><line x1="90" y1="185" x2="88" y2="330" stroke="#1a3a5c" stroke-width=".5" opacity=".4"/><line x1="110" y1="185" x2="112" y2="330" stroke="#1a3a5c" stroke-width=".5" opacity=".4"/></g>`;
+    case 'skirt':
+      return `<g id="worn-${id}"><path d="M 76 185 L 124 185 L 135 280 L 65 280 Z" fill="${c}" stroke="#5a4bd1" stroke-width="1" opacity=".92"/><line x1="100" y1="185" x2="100" y2="278" stroke="#5a4bd1" stroke-width=".5" opacity=".4"/></g>`;
+    case 'miniskirt':
+      return `<g id="worn-${id}"><path d="M 78 185 L 122 185 L 130 240 L 70 240 Z" fill="${c}" stroke="#e05680" stroke-width="1" opacity=".92"/></g>`;
+    case 'sundress':
+      return `<g id="worn-${id}"><path d="M 72 92 L 128 92 L 138 280 L 62 280 Z" fill="${c}" stroke="#e1b12c" stroke-width="1" opacity=".9"/><path d="M 72 92 L 60 108 L 56 102 L 68 90" fill="${c}" stroke="#e1b12c" stroke-width="1" opacity=".9"/><path d="M 128 92 L 140 108 L 144 102 L 132 90" fill="${c}" stroke="#e1b12c" stroke-width="1" opacity=".9"/><circle cx="90" cy="100" r="4" fill="#fff" opacity=".4"/><circle cx="110" cy="100" r="4" fill="#fff" opacity=".4"/><line x1="65" y1="200" x2="135" y2="200" stroke="#fff" stroke-width="1" opacity=".3"/><line x1="64" y1="240" x2="136" y2="240" stroke="#fff" stroke-width="1" opacity=".3"/></g>`;
+    case 'eveningdress':
+      return `<g id="worn-${id}"><path d="M 74 92 L 126 92 L 140 290 L 60 290 Z" fill="${c}" stroke="#7d3c98" stroke-width="1" opacity=".9"/><path d="M 74 92 L 62 108 L 58 102 L 70 90" fill="${c}" stroke="#7d3c98" stroke-width="1" opacity=".9"/><path d="M 126 92 L 138 108 L 142 102 L 130 90" fill="${c}" stroke="#7d3c98" stroke-width="1" opacity=".9"/><path d="M 86 94 L 100 120 L 114 94" fill="none" stroke="#f1c40f" stroke-width="1.5"/><circle cx="100" cy="125" r="2" fill="#f1c40f"/></g>`;
+    case 'cap':
+      return `<g id="worn-${id}"><path d="M 72 38 Q 100 18 128 38 Q 132 42 128 44 Q 100 32 72 44 Q 68 42 72 38 Z" fill="${c}" stroke="#a02020" stroke-width="1"/><path d="M 128 40 Q 140 36 142 42 Q 140 46 128 44" fill="${c}" stroke="#a02020" stroke-width="1"/><path d="M 72 42 Q 100 28 128 42" fill="none" stroke="#fff" stroke-width="1" opacity=".5"/></g>`;
+    case 'sunhat':
+      return `<g id="worn-${id}"><ellipse cx="100" cy="44" rx="38" ry="8" fill="${c}" stroke="#b2bec3" stroke-width="1"/><path d="M 82 44 Q 82 22 100 22 Q 118 22 118 44" fill="${c}" stroke="#b2bec3" stroke-width="1"/><circle cx="108" cy="40" r="3" fill="#fdcb6e"/><circle cx="112" cy="38" r="2" fill="#fdcb6e"/></g>`;
+    case 'sunglasses':
+      return `<g id="worn-${id}"><rect x="80" y="40" width="16" height="10" rx="3" fill="${c}" stroke="#111" stroke-width="1"/><rect x="104" y="40" width="16" height="10" rx="3" fill="${c}" stroke="#111" stroke-width="1"/><line x1="96" y1="45" x2="104" y2="45" stroke="#111" stroke-width="1.5"/><line x1="80" y1="45" x2="76" y2="44" stroke="#111" stroke-width="1.5"/><line x1="120" y1="45" x2="124" y2="44" stroke="#111" stroke-width="1.5"/></g>`;
+    case 'handbag':
+      return `<g id="worn-${id}"><path d="M 38 170 Q 30 165 30 175 L 32 195 Q 38 200 44 195 L 44 175 Q 44 165 38 170 Z" fill="${c}" stroke="#5a2d0c" stroke-width="1"/><path d="M 34 175 A 10 10 0 0 1 42 175" fill="none" stroke="#5a2d0c" stroke-width="1.5"/><rect x="30" y="176" width="14" height="3" rx="1" fill="#d4a574"/></g>`;
+    case 'watch':
+      return `<g id="worn-${id}"><rect x="146" y="120" width="10" height="14" rx="2" fill="#f1c40f" stroke="#b8860b" stroke-width="1"/><line x1="146" y1="127" x2="142" y2="125" stroke="#b8860b" stroke-width="1.5"/><line x1="156" y1="127" x2="160" y2="125" stroke="#b8860b" stroke-width="1.5"/><circle cx="151" cy="127" r="2" fill="#fff"/></g>`;
+    case 'sneakers':
+      return `<g id="worn-${id}"><ellipse cx="76" cy="340" rx="15" ry="9" fill="${c}" stroke="#ccc" stroke-width="1"/><ellipse cx="124" cy="340" rx="15" ry="9" fill="${c}" stroke="#ccc" stroke-width="1"/><path d="M 68 338 Q 76 335 84 338" fill="none" stroke="#e74c3c" stroke-width="1.5"/><path d="M 116 338 Q 124 335 132 338" fill="none" stroke="#e74c3c" stroke-width="1.5"/></g>`;
+    case 'boots':
+      return `<g id="worn-${id}"><path d="M 64 330 L 88 330 L 88 342 Q 88 348 82 348 L 70 348 Q 64 348 64 342 Z" fill="${c}" stroke="#2c1810" stroke-width="1"/><path d="M 112 330 L 136 330 L 136 342 Q 136 348 130 348 L 118 348 Q 112 348 112 342 Z" fill="${c}" stroke="#2c1810" stroke-width="1"/><rect x="66" y="310" width="20" height="24" rx="3" fill="${c}" stroke="#2c1810" stroke-width="1"/><rect x="114" y="310" width="20" height="24" rx="3" fill="${c}" stroke="#2c1810" stroke-width="1"/></g>`;
+    case 'heels':
+      return `<g id="worn-${id}"><path d="M 64 338 L 88 338 L 82 348 L 66 348 Z" fill="${c}" stroke="#a02020" stroke-width="1"/><path d="M 112 338 L 136 338 L 130 348 L 114 348 Z" fill="${c}" stroke="#a02020" stroke-width="1"/><line x1="68" y1="338" x2="68" y2="330" stroke="${c}" stroke-width="2"/><line x1="132" y1="338" x2="132" y2="330" stroke="${c}" stroke-width="2"/></g>`;
+    case 'necklace':
+      return `<g id="worn-${id}"><path d="M 84 80 Q 100 110 116 80" fill="none" stroke="${c}" stroke-width="2"/><circle cx="100" cy="110" r="4" fill="${c}" stroke="#d4a017" stroke-width="1"/><circle cx="94" cy="102" r="1.5" fill="${c}"/><circle cx="106" cy="102" r="1.5" fill="${c}"/></g>`;
+    default:
+      return '';
+  }
+}
+
+function getItemsForGender(){
+  return CLOTHING.filter(i => i.gender===state.gender || i.gender==='both');
+}
+
+function renderTabs(){
+  const container = document.getElementById('tabs');
+  container.innerHTML = CATEGORIES.map(c =>
+    `<button class="${state.activeCat===c.id?'active':''}" onclick="switchCat('${c.id}')">${c.emoji} ${c.label}</button>`
+  ).join('');
+}
+
+function renderGrid(){
+  const container = document.getElementById('itemsGrid');
+  const items = getItemsForGender().filter(i => i.cat===state.activeCat);
+  if(items.length===0){
+    container.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:20px;color:#aaa;font-size:14px">此分類暫無適合的衣物</div>';
+    return;
+  }
+  container.innerHTML = items.map(i => {
+    const worn = !!state.worn[i.id];
+    const sel = state.selectedItem === i.id;
+    let cls = 'item-btn';
+    if(worn) cls += ' worn';
+    if(sel) cls += ' selected';
+    return `<button class="${cls}" onclick="clickItem('${i.id}')">
+      <span class="icon">${i.emoji}</span>
+      <span class="label">${i.name}</span>
+    </button>`;
+  }).join('');
+}
+
+function switchCat(cat){
+  state.activeCat = cat;
+  renderTabs();
+  renderGrid();
+}
+
+function updateHint(){
+  const hint = document.getElementById('dollHint');
+  if(state.selectedItem){
+    const item = CLOTHING.find(c=>c.id===state.selectedItem);
+    hint.textContent = '👉 點娃娃穿 ' + (item?item.name:'') + ' 👈';
+    hint.className = 'doll-hint active';
+  } else {
+    hint.textContent = '👆 先選衣物，再點娃娃穿上';
+    hint.className = 'doll-hint';
+  }
+}
+
+function clickItem(id){
+  const item = CLOTHING.find(c=>c.id===id);
+  if(!item) return;
+  if(state.worn[id]){
+    delete state.worn[id];
+    if(state.selectedItem === id) state.selectedItem = null;
+    renderClothing();
+    updateCount();
+    renderGrid();
+    updateHint();
+    return;
+  }
+  state.selectedItem = (state.selectedItem === id) ? null : id;
+  renderGrid();
+  updateHint();
+}
+
+function wearSelected(){
+  const id = state.selectedItem;
+  if(!id) return;
+  const item = CLOTHING.find(c=>c.id===id);
+  if(!item) return;
+  if(state.worn[id]) return;
+  if(item.cat==='dress'){
+    for(const key of Object.keys(state.worn)){
+      const it = CLOTHING.find(c=>c.id===key);
+      if(it && (it.cat==='top'||it.cat==='bottom')) delete state.worn[key];
+    }
+  }
+  if(item.cat==='top'||item.cat==='bottom'){
+    for(const key of Object.keys(state.worn)){
+      const it = CLOTHING.find(c=>c.id===key);
+      if(it && it.cat==='dress') delete state.worn[key];
+    }
+  }
+  if(item.cat==='top'){
+    for(const key of Object.keys(state.worn)){
+      const it = CLOTHING.find(c=>c.id===key);
+      if(it && it.cat==='top') delete state.worn[key];
+    }
+  }
+  if(item.cat==='bottom'){
+    for(const key of Object.keys(state.worn)){
+      const it = CLOTHING.find(c=>c.id===key);
+      if(it && it.cat==='bottom') delete state.worn[key];
+    }
+  }
+  state.worn[id] = true;
+  state.selectedItem = null;
+  renderClothing();
+  speakWord(item.name);
+  updateCount();
+  renderGrid();
+  updateHint();
+}
+
+function speakWord(word){
+  if(!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  const ut = new SpeechSynthesisUtterance(word);
+  ut.lang = 'en-US';
+  ut.rate = 0.85;
+  ut.pitch = 1.1;
+  const voices = window.speechSynthesis.getVoices();
+  const enVoice = voices.find(v=>v.lang.startsWith('en')&&v.name.includes('Google'));
+  if(enVoice) ut.voice = enVoice;
+  window.speechSynthesis.speak(ut);
+  const badge = document.getElementById('pronounceBadge');
+  badge.textContent = '🔊 ' + word;
+  badge.className = 'pronounce-badge show';
+  setTimeout(()=>{badge.className='pronounce-badge'}, 1200);
+}
+
+function setGender(g){
+  state.gender = g;
+  state.worn = {};
+  state.selectedItem = null;
+  document.getElementById('btnMale').className = g==='male'?'active':'';
+  document.getElementById('btnFemale').className = g==='female'?'active':'';
+  drawDoll(g);
+  renderClothing();
+  renderGrid();
+  updateCount();
+  updateHint();
+}
+
+function updateCount(){
+  const n = Object.keys(state.worn).length;
+  document.getElementById('wordCount').textContent = '📖 已穿 ' + n + ' 件';
+  document.getElementById('exportBtn').disabled = n===0;
+}
+
+function exportWords(){
+  const words = Object.keys(state.worn).map(id => {
+    const item = CLOTHING.find(c=>c.id===id);
+    return item ? item.name : null;
+  }).filter(Boolean);
+  if(words.length===0) return;
+  const text = 'Fashion English - 我的穿搭單字\n' + '='.repeat(30) + '\n\n' +
+    words.map((w,i)=>`${i+1}. ${w}`).join('\n') +
+    '\n\n---\n' + new Date().toLocaleString('zh-TW');
+  const blob = new Blob([text], {type:'text/plain'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'fashion-english-vocabulary.txt';
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(a.href);
+}
+
+document.getElementById('dollArea').addEventListener('click', function(e){
+  if(e.target.closest('.doll-wrap')){
+    wearSelected();
+  }
+});
+
+// Init
+function init(){
+  drawDoll('male');
+  renderTabs();
+  renderGrid();
+  updateCount();
+  updateHint();
+  // Load voices
+  if(window.speechSynthesis){
+    window.speechSynthesis.getVoices();
+    window.speechSynthesis.onvoiceschanged = ()=>{
+      window.speechSynthesis.getVoices();
+    };
+  }
+}
+init();
+</script>
+</body>
+</html>
