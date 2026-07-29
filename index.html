@@ -134,7 +134,8 @@ const CLOTHING = [
   {id:'shirt',name:'Shirt',cat:'top',gender:'male',color:'#fff',cname:'white',emoji:'👔'},
   {id:'blouse',name:'Blouse',cat:'top',gender:'female',color:'#f8a5c2',cname:'pink',emoji:'👚'},
   {id:'sweater',name:'Sweater',cat:'top',gender:'both',color:'#6ab04c',cname:'green',emoji:'🧶'},
-  {id:'jacket',name:'Jacket',cat:'top',gender:'both',color:'#e17055',cname:'red',emoji:'🧥'},
+  {id:'jacket',name:'Jacket',cat:'top',gender:'male',color:'#e17055',cname:'red',emoji:'🧥'},
+  {id:'suit',name:'Suit',cat:'top',gender:'male',color:'#2d3436',cname:'dark navy',emoji:'🤵'},
   {id:'shorts',name:'Shorts',cat:'bottom',gender:'both',color:'#c4a35a',cname:'khaki',emoji:'🩳'},
   {id:'trousers',name:'Trousers',cat:'bottom',gender:'both',color:'#636e72',cname:'gray',emoji:'👖'},
   {id:'jeans',name:'Jeans',cat:'bottom',gender:'both',color:'#2d5a8e',cname:'dark blue',emoji:'👖'},
@@ -148,7 +149,7 @@ const CLOTHING = [
   {id:'handbag',name:'Handbag',cat:'accessory',gender:'female',color:'#8b4513',cname:'brown',emoji:'👜'},
   {id:'watch',name:'Watch',cat:'accessory',gender:'both',color:'#bdc3c7',cname:'silver',emoji:'⌚'},
   {id:'sneakers',name:'Sneakers',cat:'accessory',gender:'both',color:'#fff',cname:'white',emoji:'👟'},
-  {id:'boots',name:'Boots',cat:'accessory',gender:'both',color:'#4a3728',cname:'dark brown',emoji:'🥾'},
+  {id:'boots',name:'Boots',cat:'accessory',gender:'male',color:'#4a3728',cname:'dark brown',emoji:'🥾'},
   {id:'heels',name:'Heels',cat:'accessory',gender:'female',color:'#e74c3c',cname:'red',emoji:'👠'},
   {id:'necklace',name:'Necklace',cat:'accessory',gender:'female',color:'#f1c40f',cname:'gold',emoji:'📿'},
 ];
@@ -244,6 +245,8 @@ function getClothingSvg(id){
       return `<g id="worn-${id}"><path d="M 68 88 Q 100 82 132 88 L 127 192 L 73 192 Z" fill="${c}" stroke="#2d7d2d" stroke-width="1.5" opacity=".92"/><path d="M 68 90 L 46 118 L 40 111 L 66 86" fill="${c}" stroke="#2d7d2d" stroke-width="1.5" opacity=".92"/><path d="M 132 90 L 154 118 L 160 111 L 134 86" fill="${c}" stroke="#2d7d2d" stroke-width="1.5" opacity=".92"/><path d="M 88 88 L 100 106 L 112 88" fill="none" stroke="#fff" stroke-width="2"/><line x1="80" y1="130" x2="120" y2="130" stroke="#fff" stroke-width="1" opacity=".3"/><line x1="80" y1="140" x2="120" y2="140" stroke="#fff" stroke-width="1" opacity=".3"/><line x1="80" y1="150" x2="120" y2="150" stroke="#fff" stroke-width="1" opacity=".3"/></g>`;
     case 'jacket':
       return `<g id="worn-${id}"><path d="M 68 92 L 132 92 L 128 190 L 72 190 Z" fill="${c}" stroke="#c0392b" stroke-width="1" opacity=".9"/><path d="M 68 94 L 44 120 L 38 113 L 64 90" fill="${c}" stroke="#c0392b" stroke-width="1" opacity=".9"/><path d="M 132 94 L 156 120 L 162 113 L 136 90" fill="${c}" stroke="#c0392b" stroke-width="1" opacity=".9"/><line x1="100" y1="92" x2="100" y2="185" stroke="#c0392b" stroke-width="1.5" stroke-dasharray="3,2"/><line x1="92" y1="185" x2="108" y2="185" stroke="#c0392b" stroke-width="1.5"/></g>`;
+    case 'suit':
+      return `<g id="worn-${id}"><path d="M 68 92 L 132 92 L 128 192 L 72 192 Z" fill="${c}" stroke="#111" stroke-width="1" opacity=".94"/><path d="M 68 94 L 42 120 L 36 112 L 64 90" fill="${c}" stroke="#111" stroke-width="1" opacity=".94"/><path d="M 132 94 L 158 120 L 164 112 L 136 90" fill="${c}" stroke="#111" stroke-width="1" opacity=".94"/><path d="M 90 92 L 100 135 L 110 92 Z" fill="#fff"/><path d="M 96 92 L 100 100 L 104 92 L 100 145 Z" fill="#c0392b"/><line x1="90" y1="92" x2="93" y2="145" stroke="#555" stroke-width=".8"/><line x1="110" y1="92" x2="107" y2="145" stroke="#555" stroke-width=".8"/></g>`;
     case 'shorts':
       return `<g id="worn-${id}"><path d="M 78 185 L 122 185 L 118 250 L 82 250 Z" fill="${c}" stroke="#a0843a" stroke-width="1" opacity=".92"/><path d="M 78 185 L 82 250 L 72 248 L 76 185" fill="${c}" stroke="#a0843a" stroke-width="1" opacity=".92"/><path d="M 122 185 L 118 250 L 128 248 L 124 185" fill="${c}" stroke="#a0843a" stroke-width="1" opacity=".92"/></g>`;
     case 'trousers':
