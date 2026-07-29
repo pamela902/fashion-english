@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Fashion English - 穿搭學英文</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,system-ui,sans-serif}
@@ -77,9 +78,32 @@ body{background:linear-gradient(145deg,#fff5f0 0%,#f0e6ff 100%);display:flex;fle
 @media(min-height:800px){
   .bottom-panel{max-height:38vh}
 }
+.login-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.7);z-index:100;display:flex;align-items:center;justify-content:center}
+.login-box{background:#fff;border-radius:20px;padding:24px 20px;text-align:center;width:90%;max-width:320px;box-shadow:0 8px 30px rgba(0,0,0,.3)}
+.login-box h3{font-size:18px;margin-bottom:8px;color:#6c5ce7}
+.login-box p{font-size:13px;color:#888;margin-bottom:14px}
+.login-box input{width:100%;padding:10px 14px;border:2px solid #ddd;border-radius:12px;font-size:15px;margin-bottom:10px;outline:0;text-align:center}
+.login-box input:focus{border-color:#6c5ce7}
+.login-box button{width:100%;padding:11px;border:none;border-radius:12px;background:#6c5ce7;color:#fff;font-size:15px;font-weight:700;cursor:pointer}
+.login-box button:active{transform:scale(.96)}
+.login-box .info{font-size:11px;color:#aaa;margin-top:10px}
+.saved-badge{position:absolute;top:8px;right:8px;background:#00b894;color:#fff;padding:3px 8px;border-radius:8px;font-size:10px;font-weight:700;z-index:4;display:none}
+.teacher-btn{padding:3px 8px;border:1px solid #ddd;border-radius:10px;background:#fff;color:#888;font-size:10px;cursor:pointer;position:absolute;top:6px;left:6px;z-index:4}
+.teacher-btn:active{background:#f0f0f5}
 </style>
 </head>
 <body>
+
+<div class="login-overlay" id="loginOverlay" style="display:none">
+  <div class="login-box">
+    <h3>🎒 學生登入</h3>
+    <p>請輸入班級與座號</p>
+    <input type="text" id="classInput" placeholder="班級（例：三年一班）" autocomplete="off">
+    <input type="text" id="seatInput" placeholder="座號（例：15）" autocomplete="off">
+    <button onclick="studentLogin()">開始挑戰</button>
+    <div class="info">資料僅供老師查看學習狀況</div>
+  </div>
+</div>
 
 <div class="header">
   <h1><span>👕</span> Fashion English</h1>
@@ -95,6 +119,8 @@ body{background:linear-gradient(145deg,#fff5f0 0%,#f0e6ff 100%);display:flex;fle
 
 <div class="doll-area" id="dollArea">
   <div class="doll-wrap" id="dollWrap">
+    <button class="teacher-btn" id="teacherBtn" onclick="viewScores()" style="display:none">📊 成績</button>
+    <span class="saved-badge" id="savedBadge">💾 已存</span>
     <svg id="dollSvg" viewBox="0 0 200 380" xmlns="http://www.w3.org/2000/svg"></svg>
     <div class="clothing-overlay" id="clothingOverlay">
       <svg viewBox="0 0 200 380" xmlns="http://www.w3.org/2000/svg" id="clothingSvg"></svg>
@@ -162,6 +188,11 @@ const CATEGORIES = [
 ];
 
 let state = {mode:'learn',gender:'male',worn:{},activeCat:'top',selectedItem:null,lastWord:''};
+
+const SUPABASE_URL = 'https://xrmkwnnlvvrztjgjchwm.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhybWt3bm5sdnZyenRqZ2pjaHdtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUyMTM5NjYsImV4cCI6MjEwMDc4OTk2Nn0.XAmCRwKaFvJ3AI2Tn21wQwOlxoxBPw0HzgizJzIhKB0';
+let sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+let student = {className:'', seatNo:''};
 
 function drawDoll(gender){
   const svg = document.getElementById('dollSvg');
@@ -574,11 +605,18 @@ function switchMode(mode){
   document.getElementById('voiceWidget').style.display = mode==='learn'?'flex':'none';
   if(mode==='learn'){
     setGender('male');
+    document.getElementById('teacherBtn').style.display = 'none';
   } else {
+    document.getElementById('teacherBtn').style.display = 'block';
+    if(student.className) document.getElementById('teacherBtn').textContent = '📊 ' + student.className;
     document.getElementById('gameResult').style.display = 'none';
-    if(!robber) gameNew();
-    renderTabs();
-    renderGrid();
+    if(!student.className){
+      document.getElementById('loginOverlay').style.display = 'flex';
+    } else {
+      if(!robber) gameNew();
+      renderTabs();
+      renderGrid();
+    }
   }
 }
 
@@ -648,9 +686,60 @@ function gameCheck(){
     html = '🎉 完全正確！你抓到搶匪的穿搭了！';
     const sc = parseInt(document.getElementById('gameScore').textContent) + 1;
     document.getElementById('gameScore').textContent = sc;
+    saveToSupabase(correct, missing, wrong);
     setTimeout(()=>gameNew(), 2000);
+  } else {
+    saveToSupabase(correct, missing, wrong);
   }
   r.innerHTML = html;
+}
+
+function studentLogin(){
+  const cn = document.getElementById('classInput').value.trim();
+  const sn = document.getElementById('seatInput').value.trim();
+  if(!cn || !sn) return alert('請輸入班級和座號');
+  student = {className:cn, seatNo:sn};
+  document.getElementById('loginOverlay').style.display = 'none';
+  document.getElementById('teacherBtn').textContent = '📊 ' + cn;
+  gameNew();
+}
+
+async function saveToSupabase(correct, missing, wrong){
+  if(!sb || !student.className) return;
+  try {
+    await sb.from('student_answers').insert({
+      class_name: student.className,
+      seat_no: student.seatNo,
+      robber_items: robber.outfit.map(c=>({id:c.id,name:c.name,color:c.cname})),
+      student_items: Object.keys(state.worn).map(id=>{
+        const c = CLOTHING.find(x=>x.id===id);
+        return c?{id:c.id,name:c.name,color:c.cname}:null;
+      }).filter(Boolean),
+      total_correct: correct.length,
+      total_count: robber.outfit.length
+    });
+    const badge = document.getElementById('savedBadge');
+    badge.style.display = 'block';
+    setTimeout(()=>badge.style.display='none', 1500);
+  } catch(e){ console.log('Save error:', e); }
+}
+
+async function viewScores(){
+  if(!sb) return alert('資料庫未連線');
+  if(!student.className) return alert('請先登入');
+  try {
+    const {data, error} = await sb.from('student_answers')
+      .select('*').eq('class_name', student.className)
+      .order('created_at', {ascending:false}).limit(50);
+    if(error) throw error;
+    let msg = data.length===0 ? '尚無作答紀錄' :
+      data.map((r,i)=>
+        `${i+1}. 座號${r.seat_no} ${r.total_correct}/${r.total_count} ` +
+        (r.total_correct===r.total_count?'✅':'') +
+        ` (${new Date(r.created_at).toLocaleTimeString('zh-TW')})`
+      ).join('\n');
+    alert('📊 ' + student.className + ' 作答紀錄\n\n' + msg);
+  } catch(e){ alert('查詢失敗：' + e.message); }
 }
 
 function init(){
