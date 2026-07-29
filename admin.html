@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fashion English - 管理後台</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,system-ui,sans-serif;background:#f5f5fa;padding:16px;max-width:900px;margin:0 auto}
+h1{font-size:22px;color:#6c5ce7;margin-bottom:6px}
+.sub{font-size:13px;color:#888;margin-bottom:16px}
+.filter{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+.filter input,.filter select{padding:8px 12px;border:1px solid #ddd;border-radius:10px;font-size:14px;outline:0}
+.filter input:focus,.filter select:focus{border-color:#6c5ce7}
+.filter button{padding:8px 16px;border:none;border-radius:10px;background:#6c5ce7;color:#fff;font-size:14px;cursor:pointer}
+.refresh{background:#00b894}
+.card{background:#fff;border-radius:14px;padding:16px;margin-bottom:12px;box-shadow:0 1px 6px rgba(0,0,0,.06)}
+.card h3{font-size:15px;color:#6c5ce7;margin-bottom:8px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:8px 6px;text-align:center;border-bottom:1px solid #eee}
+th{background:#f8f8fc;color:#555;font-weight:700;position:sticky;top:0}
+.pass{color:#00b894;font-weight:700}
+.fail{color:#e17055}
+.items{font-size:11px;color:#888;max-width:180px;word-break:break-all}
+.stats{display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+.stat{background:#fff;border-radius:12px;padding:12px 16px;box-shadow:0 1px 6px rgba(0,0,0,.06);text-align:center;min-width:80px}
+.stat .num{font-size:24px;font-weight:700;color:#6c5ce7}
+.stat .label{font-size:11px;color:#888;margin-top:2px}
+.loading{text-align:center;padding:40px;color:#aaa}
+</style>
+</head>
+<body>
+
+<h1>📊 Fashion English 管理後台</h1>
+<div class="sub">學生搶案作答紀錄</div>
+
+<div class="filter">
+  <input type="text" id="filterClass" placeholder="班級篩選（例：三年一班）" oninput="loadData()">
+  <button onclick="loadData()">🔍 查詢</button>
+  <button class="refresh" onclick="loadData()">🔄 重新整理</button>
+  <span style="margin-left:auto;font-size:12px;color:#aaa;align-self:center" id="lastUpdate"></span>
+</div>
+
+<div class="stats" id="stats"></div>
+<div id="content"><div class="loading">載入中...</div></div>
+
+<script>
+const SB = window.supabase.createClient(
+  'https://xrmkwnnlvvrztjgjchwm.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InhybWt3bm5sdnZyenRqZ2pjaHdtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUyMTM5NjYsImV4cCI6MjEwMDc4OTk2Nn0.XAmCRwKaFvJ3AI2Tn21wQwOlxoxBPw0HzgizJzIhKB0'
+);
+
+async function loadData(){
+  document.getElementById('content').innerHTML = '<div class="loading">載入中...</div>';
+  const fc = document.getElementById('filterClass').value.trim();
+
+  let q = SB.from('student_answers').select('*').order('created_at', {ascending: false}).limit(200);
+  if(fc) q = q.ilike('class_name', '%'+fc+'%');
+
+  const {data, error} = await q;
+
+  const now = new Date().toLocaleTimeString('zh-TW');
+  document.getElementById('lastUpdate').textContent = '更新於 ' + now;
+
+  if(error){ document.getElementById('content').innerHTML = '<div class="loading">錯誤：'+error.message+'</div>'; return; }
+  if(!data || data.length===0){ document.getElementById('content').innerHTML = '<div class="loading">尚無作答紀錄</div>'; document.getElementById('stats').innerHTML = ''; return; }
+
+  const byClass = {};
+  let totalCorrect = 0, totalCount = 0;
+  data.forEach(r => {
+    if(!byClass[r.class_name]) byClass[r.class_name] = [];
+    byClass[r.class_name].push(r);
+    totalCorrect += r.total_correct || 0;
+    totalCount += r.total_count || 0;
+  });
+
+  const rate = totalCount > 0 ? Math.round(totalCorrect / totalCount * 100) : 0;
+  document.getElementById('stats').innerHTML = `
+    <div class="stat"><div class="num">${data.length}</div><div class="label">總作答次數</div></div>
+    <div class="stat"><div class="num">${totalCorrect}/${totalCount}</div><div class="label">總正確率</div></div>
+    <div class="stat"><div class="num">${rate}%</div><div class="label">答對比例</div></div>
+    <div class="stat"><div class="num">${Object.keys(byClass).length}</div><div class="label">班級數</div></div>
+  `;
+
+  let html = '';
+  for(const [cn, rows] of Object.entries(byClass)){
+    const cr = rows.reduce((s,r)=>s+(r.total_correct||0),0);
+    const ct = rows.reduce((s,r)=>s+(r.total_count||0),0);
+    html += '<div class="card"><h3>📚 ' + cn + '（' + rows.length + ' 筆）— 答對率 ' + Math.round(cr/ct*100) + '%</h3>';
+    html += '<table><tr><th>座號</th><th>正確</th><th>結果</th><th>搶匪穿搭</th><th>學生答題</th><th>時間</th></tr>';
+    rows.forEach(r => {
+      const ok = r.total_correct === r.total_count;
+      const rItems = (r.robber_items||[]).map(c=>c.color+' '+c.name).join('、');
+      const sItems = (r.student_items||[]).map(c=>c.color+' '+c.name).join('、');
+      html += `<tr>
+        <td><b>${r.seat_no}</b></td>
+        <td class="${ok?'pass':'fail'}">${r.total_correct}/${r.total_count}</td>
+        <td>${ok?'✅全對':''}</td>
+        <td class="items">${rItems}</td>
+        <td class="items">${sItems}</td>
+        <td style="font-size:11px;color:#888">${new Date(r.created_at).toLocaleString('zh-TW')}</td>
+      </tr>`;
+    });
+    html += '</table></div>';
+  }
+  document.getElementById('content').innerHTML = html;
+}
+
+loadData();
+setInterval(loadData, 30000);
+</script>
+</body>
+</html>

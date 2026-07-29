@@ -724,22 +724,8 @@ async function saveToSupabase(correct, missing, wrong){
   } catch(e){ console.log('Save error:', e); }
 }
 
-async function viewScores(){
-  if(!sb) return alert('資料庫未連線');
-  if(!student.className) return alert('請先登入');
-  try {
-    const {data, error} = await sb.from('student_answers')
-      .select('*').eq('class_name', student.className)
-      .order('created_at', {ascending:false}).limit(50);
-    if(error) throw error;
-    let msg = data.length===0 ? '尚無作答紀錄' :
-      data.map((r,i)=>
-        `${i+1}. 座號${r.seat_no} ${r.total_correct}/${r.total_count} ` +
-        (r.total_correct===r.total_count?'✅':'') +
-        ` (${new Date(r.created_at).toLocaleTimeString('zh-TW')})`
-      ).join('\n');
-    alert('📊 ' + student.className + ' 作答紀錄\n\n' + msg);
-  } catch(e){ alert('查詢失敗：' + e.message); }
+function viewScores(){
+  window.open('admin.html', '_blank');
 }
 
 function init(){
