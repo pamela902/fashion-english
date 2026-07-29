@@ -16,7 +16,7 @@ body{background:linear-gradient(145deg,#fff5f0 0%,#f0e6ff 100%);display:flex;fle
 .gender-btn button.active{border-color:#6c5ce7;background:#6c5ce7;color:#fff}
 .gender-btn button:active{transform:scale(.95)}
 .doll-area{flex:1;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;min-height:0}
-.doll-wrap{position:relative;width:100%;max-width:280px;aspect-ratio:200/380}
+.doll-wrap{position:relative;width:100%;max-width:360px;aspect-ratio:550/300}
 .doll-wrap svg{width:100%;height:100%;display:block}
 .clothing-overlay{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none}
 .clothing-overlay svg{width:100%;height:100%}
@@ -76,9 +76,9 @@ body{background:linear-gradient(145deg,#fff5f0 0%,#f0e6ff 100%);display:flex;fle
 
 <div class="doll-area" id="dollArea">
   <div class="doll-wrap" id="dollWrap">
-    <svg id="dollSvg" viewBox="0 0 200 380" xmlns="http://www.w3.org/2000/svg"></svg>
+    <svg id="dollSvg" viewBox="0 0 550 300" xmlns="http://www.w3.org/2000/svg"></svg>
     <div class="clothing-overlay" id="clothingOverlay">
-      <svg viewBox="0 0 200 380" xmlns="http://www.w3.org/2000/svg" id="clothingSvg"></svg>
+      <svg viewBox="0 0 550 300" xmlns="http://www.w3.org/2000/svg" id="clothingSvg"></svg>
     </div>
     <div class="doll-drop-highlight" id="dropHighlight"></div>
     <div class="pronounce-badge" id="pronounceBadge"></div>
@@ -134,53 +134,8 @@ const CATEGORIES = [
 let state = {gender:'male',worn:{},activeCat:'top',selectedItem:null,lastWord:''};
 
 function drawDoll(gender){
-  const svg = document.getElementById('dollSvg');
-  const skin = '#f5d0b0', skinDark = '#d4a574';
-  const hc = gender==='male'?'#4a3728':'#5c2e0e';
-
-  let hair = '';
-  if(gender==='male'){
-    hair = `
-      <path d="M 68 42 Q 68 16 100 16 Q 132 16 132 42" fill="${hc}"/>
-      <path d="M 65 38 Q 58 34 56 42 L 54 48 Q 52 54 56 52 L 60 46 Q 62 42 67 40" fill="${hc}"/>
-      <path d="M 135 38 Q 142 34 144 42 L 146 48 Q 148 54 144 52 L 140 46 Q 138 42 133 40" fill="${hc}"/>`;
-  } else {
-    hair = `
-      <path d="M 66 42 Q 66 6 100 6 Q 134 6 134 42" fill="${hc}"/>
-      <path d="M 68 38 Q 48 60 46 120 Q 44 170 52 170 Q 60 168 62 140 Q 66 90 72 42" fill="${hc}"/>
-      <path d="M 132 38 Q 152 60 154 120 Q 156 170 148 170 Q 140 168 138 140 Q 134 90 128 42" fill="${hc}"/>
-      <path d="M 82 20 Q 100 10 118 20 Q 128 80 135 175 Q 132 185 120 180 Q 100 175 80 180 Q 68 185 65 175 Q 72 80 82 20" fill="${hc}" opacity=".8"/>
-      <path d="M 72 40 Q 78 28 100 28 Q 122 28 128 40 Q 132 46 128 44 Q 120 36 100 36 Q 80 36 72 44 Q 68 46 72 40" fill="${hc}"/>`;
-  }
-
-  svg.innerHTML = `
-    <defs>
-      <linearGradient id="skinGrad" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="${skin}"/>
-        <stop offset="100%" stop-color="#e8c4a0"/>
-      </linearGradient>
-    </defs>
-    <g id="doll-body">
-      ${hair}
-      <circle cx="100" cy="48" r="30" fill="url(#skinGrad)" stroke="${skinDark}" stroke-width="1.5"/>
-      <circle cx="89" cy="44" r="2.5" fill="#2d3436"/>
-      <circle cx="111" cy="44" r="2.5" fill="#2d3436"/>
-      <circle cx="89" cy="44" r="1" fill="#fff"/>
-      <circle cx="111" cy="44" r="1" fill="#fff"/>
-      <path d="M 93 52 Q 100 57 107 52" fill="none" stroke="#c97" stroke-width="1.5" stroke-linecap="round"/>
-      <rect x="93" y="78" width="14" height="12" rx="4" fill="url(#skinGrad)" stroke="${skinDark}" stroke-width="1"/>
-      <path d="M 72 92 L 128 92 L 120 185 L 80 185 Z" fill="url(#skinGrad)" stroke="${skinDark}" stroke-width="1.5"/>
-      <path d="M 72 95 L 44 210" stroke="${skin}" stroke-width="18" stroke-linecap="round" fill="none"/>
-      <path d="M 72 95 L 44 210" stroke="${skinDark}" stroke-width="1.5" stroke-linecap="round" fill="none"/>
-      <path d="M 128 95 L 156 210" stroke="${skin}" stroke-width="18" stroke-linecap="round" fill="none"/>
-      <path d="M 128 95 L 156 210" stroke="${skinDark}" stroke-width="1.5" stroke-linecap="round" fill="none"/>
-      <path d="M 84 185 L 78 335" stroke="${skin}" stroke-width="22" stroke-linecap="round" fill="none"/>
-      <path d="M 84 185 L 78 335" stroke="${skinDark}" stroke-width="1.5" stroke-linecap="round" fill="none"/>
-      <path d="M 116 185 L 122 335" stroke="${skin}" stroke-width="22" stroke-linecap="round" fill="none"/>
-      <path d="M 116 185 L 122 335" stroke="${skinDark}" stroke-width="1.5" stroke-linecap="round" fill="none"/>
-      <ellipse cx="76" cy="340" rx="14" ry="7" fill="url(#skinGrad)" stroke="${skinDark}" stroke-width="1"/>
-      <ellipse cx="124" cy="340" rx="14" ry="7" fill="url(#skinGrad)" stroke="${skinDark}" stroke-width="1"/>
-    </g>`;
+  document.getElementById('dollSvg').innerHTML =
+    `<image href="doll.jpg" x="0" y="0" width="550" height="300" preserveAspectRatio="xMidYMid slice"/>`;
 }
 
 function getLayer(id){
@@ -194,9 +149,10 @@ function getLayer(id){
 
 function renderClothing(){
   const svg = document.getElementById('clothingSvg');
-  let html = '';
+  let html = '<g transform="translate(175,-40) scale(1,1)">';
   const entries = Object.entries(state.worn).sort((a,b)=>getLayer(a[0])-getLayer(b[0]));
   for(const [id] of entries) html += getClothingSvg(id);
+  html += '</g>';
   svg.innerHTML = html;
 }
 
